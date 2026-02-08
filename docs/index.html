@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activation Steering - Control Model Behavior at Runtime</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #a371f7;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-blue: #58a6ff;
+            --border: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 0;
+        }
+
+        h1 { font-size: 2.8rem; margin-bottom: 15px; }
+        .subtitle { color: var(--text-secondary); font-size: 1.3rem; }
+
+        .badges { margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap; }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+        .badge-purple { background: rgba(163, 113, 247, 0.2); color: var(--accent); }
+        .badge-blue { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+
+        section { padding: 70px 0; }
+        h2 { font-size: 1.9rem; margin-bottom: 35px; color: var(--accent); }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .concept-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .concept-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+        .concept-card h3 { color: var(--accent); margin-bottom: 15px; }
+        .concept-card p { color: var(--text-secondary); }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 25px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 25px 0;
+        }
+
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .function { color: #d2a8ff; }
+        .comment { color: #8b949e; }
+        .class { color: #7ee787; }
+
+        .diagram {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .diagram-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .diagram-box {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .diagram-arrow {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .use-case {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        .use-case h4 { color: var(--accent-blue); margin-bottom: 8px; }
+
+        .stats {
+            display: flex;
+            gap: 50px;
+            justify-content: center;
+            margin: 50px 0;
+            flex-wrap: wrap;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2.8rem; font-weight: bold; color: var(--accent); }
+        .stat-label { color: var(--text-secondary); margin-top: 5px; }
+
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 35px 0;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        .highlight {
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Activation <span class="highlight">Steering</span></h1>
+            <p class="subtitle">Control language model behavior by modifying internal activations at runtime</p>
+            <div class="badges">
+                <span class="badge badge-green">60 Tests Passing</span>
+                <span class="badge badge-purple">Interpretability</span>
+                <span class="badge badge-blue">PyTorch 2.0+</span>
+            </div>
+        </div>
+    </header>
+
+    <section>
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="diagram">
+                <div class="diagram-flow">
+                    <div class="diagram-box">
+                        <strong>Contrastive Pairs</strong><br>
+                        <small>"I don't know" vs "I'm certain"</small>
+                    </div>
+                    <span class="diagram-arrow">-></span>
+                    <div class="diagram-box">
+                        <strong>Extract Vector</strong><br>
+                        <small>Difference in activations</small>
+                    </div>
+                    <span class="diagram-arrow">-></span>
+                    <div class="diagram-box">
+                        <strong>Apply During Inference</strong><br>
+                        <small>Add to residual stream</small>
+                    </div>
+                    <span class="diagram-arrow">-></span>
+                    <div class="diagram-box" style="border-color: var(--accent-green);">
+                        <strong>Steered Output</strong><br>
+                        <small>Modified behavior</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Core Concepts</h2>
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h3>Steering Vectors</h3>
+                    <p>Directions in activation space that correspond to behavioral traits. Extract from contrastive examples and add during inference.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Contrastive Extraction</h3>
+                    <p>Create pairs of positive/negative examples, run through model, compute the mean difference in activations.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Hook System</h3>
+                    <p>Flexible hooks for steering, caching, or ablating activations at any layer during forward passes.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Analysis Tools</h3>
+                    <p>Measure projection separations, find optimal layers, compare vectors, and quantify steering effectiveness.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Quick Start</h2>
+            <div class="code-block">
+<code><span class="keyword">from</span> activation_steering <span class="keyword">import</span> (
+    <span class="class">ActivationSteerer</span>, <span class="class">SteeringVector</span>,
+    extract_steering_vector, <span class="class">ContrastivePair</span>,
+)
+
+<span class="comment"># Define contrastive pairs for "honesty" direction</span>
+pairs = [
+    <span class="class">ContrastivePair</span>(<span class="string">"I don't know"</span>, <span class="string">"I definitely know"</span>),
+    <span class="class">ContrastivePair</span>(<span class="string">"I'm not sure"</span>, <span class="string">"I'm certain"</span>),
+]
+
+<span class="comment"># Extract steering vector at layer 10</span>
+vector = <span class="function">extract_steering_vector</span>(model, tokenizer, pairs, layer_idx=<span class="string">10</span>)
+
+<span class="comment"># Create steerer and generate with steering</span>
+steerer = <span class="class">ActivationSteerer</span>(model, tokenizer)
+result = steerer.<span class="function">generate</span>(
+    prompt=<span class="string">"What is the capital of Atlantis?"</span>,
+    vectors=vector,
+    config=<span class="class">SteeringConfig</span>(coefficient=<span class="string">1.5</span>),
+)
+
+<span class="function">print</span>(result.text)  <span class="comment"># More honest, uncertain response</span></code>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Use Cases</h2>
+            <div class="use-cases">
+                <div class="use-case">
+                    <h4>Reduce Hallucinations</h4>
+                    <p>Steer toward epistemic humility and uncertainty about unknown facts</p>
+                </div>
+                <div class="use-case">
+                    <h4>Increase Helpfulness</h4>
+                    <p>Boost cooperative, informative behavior without fine-tuning</p>
+                </div>
+                <div class="use-case">
+                    <h4>Safety Research</h4>
+                    <p>Study how safety behaviors are encoded in activation space</p>
+                </div>
+                <div class="use-case">
+                    <h4>Interpretability</h4>
+                    <p>Understand the geometry of behavioral representations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">60</div>
+                    <div class="stat-label">Tests Passing</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Core Modules</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Hook Types</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Based on <a href="https://arxiv.org/abs/2308.10248">Activation Addition</a> and <a href="https://arxiv.org/abs/2310.01405">Representation Engineering</a></p>
+            <p style="margin-top: 15px;">
+                <a href="https://github.com/BabyChrist666/activation-steering">View on GitHub</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
