@@ -2,9 +2,11 @@
 
 Control language model behavior by modifying internal activations at runtime. Extract steering vectors from contrastive examples and apply them during inference to steer outputs.
 
-[![Tests](https://img.shields.io/badge/tests-60%20passed-brightgreen)]()
-[![Python](https://img.shields.io/badge/python-3.9+-blue)]()
-[![PyTorch](https://img.shields.io/badge/pytorch-2.0+-red)]()
+[![Tests](https://github.com/BabyChrist666/activation-steering/actions/workflows/tests.yml/badge.svg)](https://github.com/BabyChrist666/activation-steering/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/BabyChrist666/activation-steering/branch/master/graph/badge.svg)](https://codecov.io/gh/BabyChrist666/activation-steering)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch 2.0+](https://img.shields.io/badge/pytorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
